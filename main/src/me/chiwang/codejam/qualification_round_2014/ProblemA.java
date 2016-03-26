@@ -21,12 +21,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class ProblemA {
-    
+
     private static final String DATA_FILE_NAME = "A-small-practice.in";
     
-    private static final String PACKAGE_PATH = "me/chiwang/codejam/qualification_round_2014".replace("/", File.separator);
+    private static final String PACKAGE_PATH = "me.chiwang.codejam.qualification_round_2014".replace(".", File.separator);
     private static final String DATA_FILE_PATH = File.separator + PACKAGE_PATH + File.separator + DATA_FILE_NAME;
-    private static final String OUTPUT_FILE_PATH = "/home/chiwang/Documents/" + getOutputFilename(DATA_FILE_NAME);  
+    private static final String OUTPUT_FILE_PATH = "/home/chiwang/Documents/codejam/" + getOutputFilename(DATA_FILE_NAME);  
 	    
     private static final int NUM_OF_THREAD = Runtime.getRuntime().availableProcessors();
     
@@ -71,54 +71,59 @@ public class ProblemA {
 	}
     }
 
-    private static void parseInputAndProcess(ExecutorService executorService, List<Future<String>> computedTasks, InputStream is) throws NumberFormatException, IOException {
+    private static void parseInputAndProcess(ExecutorService executorService, List<Future<String>> computedTasks, InputStream is) {
 	
-	BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-	
-	final int T = Integer.parseInt(br.readLine());
-	
-	for (int caseNum = 1; caseNum <= T; caseNum++) {
-
-	    int firstRow = Integer.parseInt(br.readLine());
-	    Integer[] firstRound = new Integer[4];
+	try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+	    final int T = Integer.parseInt(br.readLine());
+    	
+	    for (int caseNum = 1; caseNum <= T; caseNum++) {
+    
+		int firstRow = Integer.parseInt(br.readLine());
+    	    	Integer[] firstRound = new Integer[4];
+    	    
+    	    	for (int i = 0; i < 4; i++) {
+    	    	    if (i == firstRow - 1) {
+    	    		String[] parts = br.readLine().split(" ");
+    	    		firstRound[0] = Integer.parseInt(parts[0]);
+    	    		firstRound[1] = Integer.parseInt(parts[1]);
+    	    		firstRound[2] = Integer.parseInt(parts[2]);
+    	    		firstRound[3] = Integer.parseInt(parts[3]);
+    	    	    } else {
+    	    		br.readLine();
+    	    	    }
+    	    	}
+    	    
+    	    	int secondRow = Integer.parseInt(br.readLine());
+    	    	Integer[] secondRound = new Integer[4];
+    	    	
+    	    	for (int i = 0; i < 4; i++) {
+    	    	    if (i == secondRow - 1) {
+    	    		String[] parts = br.readLine().split(" ");
+    	    		secondRound[0] = Integer.parseInt(parts[0]);
+    	    		secondRound[1] = Integer.parseInt(parts[1]);
+    	    		secondRound[2] = Integer.parseInt(parts[2]);
+    	    		secondRound[3] = Integer.parseInt(parts[3]);
+    	    	    } else {
+    	    		br.readLine();
+    	    	    }
+    	    	}
+    	    
+    	    	Future<String> futureResult = executorService.submit(new Task(caseNum, firstRound, secondRound));
+    	    	computedTasks.add(futureResult);
+    	    	
+    	    	
+    	    }
 	    
-	    for (int i = 0; i < 4; i++) {
-		if (i == firstRow - 1) {
-		    String[] parts = br.readLine().split(" ");
-		    firstRound[0] = Integer.parseInt(parts[0]);
-		    firstRound[1] = Integer.parseInt(parts[1]);
-		    firstRound[2] = Integer.parseInt(parts[2]);
-		    firstRound[3] = Integer.parseInt(parts[3]);
-		} else {
-		    br.readLine();
-		}
-	    }
+	    executorService.shutdown();
 	    
-	    int secondRow = Integer.parseInt(br.readLine());
-	    Integer[] secondRound = new Integer[4];
-	    
-	    for (int i = 0; i < 4; i++) {
-		if (i == secondRow - 1) {
-		    String[] parts = br.readLine().split(" ");
-		    secondRound[0] = Integer.parseInt(parts[0]);
-		    secondRound[1] = Integer.parseInt(parts[1]);
-		    secondRound[2] = Integer.parseInt(parts[2]);
-		    secondRound[3] = Integer.parseInt(parts[3]);
-		} else {
-		    br.readLine();
-		}
-	    }
-	    
-	    Future<String> futureResult = executorService.submit(new Task(caseNum, firstRound, secondRound));
-	    computedTasks.add(futureResult);
+	} catch (NumberFormatException | IOException ex) {
+	    ex.printStackTrace();
+	    System.exit(-1);
 	}
-	
-	executorService.shutdown();
-	br.close();
     }
 
     
-    public static void main(String[] args) throws NumberFormatException, IOException {
+    public static void main(String[] args) {
 	
 	final long startTime = System.currentTimeMillis();
 	
@@ -129,27 +134,24 @@ public class ProblemA {
 	ExecutorService executorService = Executors.newFixedThreadPool(NUM_OF_THREAD);
 	
 	parseInputAndProcess(executorService, computedTasks, is);
-	
-	BufferedWriter bw = new BufferedWriter(new FileWriter(OUTPUT_FILE_PATH));
-	
-	try {
+		
+	try (BufferedWriter bw = new BufferedWriter(new FileWriter(OUTPUT_FILE_PATH))) {	    
 	    for (Future<String> result : computedTasks) {
 		bw.write(result.get());
 	    }	    
-	} catch (CancellationException | ExecutionException | InterruptedException ex) {
+	} catch (CancellationException | ExecutionException | InterruptedException | IOException ex) {
 	    ex.printStackTrace();
 	    System.exit(-1);
-	} finally {
-	    if (bw != null) bw.close();
 	}
 	
 	final long endTime = System.currentTimeMillis();
 	
-	System.out.println(String.format("Computation finished in %d seconds", (endTime - startTime) / 1000));
+	System.out.println(String.format("Computation finished in %d seconds.%n", (endTime - startTime) / 1000));
     }
     
     private static String getOutputFilename(String inputFilename) {
 	int idx = inputFilename.lastIndexOf('.');
+	
 	if (idx != -1) {
 	    return inputFilename.substring(0, idx) + ".out";
 	} else {
